@@ -1,52 +1,17 @@
 import { Counter } from './src/contracts/counter'
-import {
-    bsv,
-    TestWallet,
-    DefaultProvider,
-    sha256,
-    toByteString,
-} from 'scrypt-ts'
-
-import * as dotenv from 'dotenv'
-
-// Load the .env file
-dotenv.config()
-
-if(!process.env.PRIVATE_KEY) {
-    throw new Error("No \"PRIVATE_KEY\" found in .env, Please run \"npm run genprivkey\" to generate a private key")
-}
-
-// Read the private key from the .env file.
-// The default private key inside the .env file is meant to be used for the Bitcoin testnet.
-// See https://scrypt.io/docs/bitcoin-basics/bsv/#private-keys
-const privateKey = bsv.PrivateKey.fromWIF(process.env.PRIVATE_KEY || '')
-
-// Prepare signer.
-// See https://scrypt.io/docs/how-to-deploy-and-call-a-contract/#prepare-a-signer-and-provider
-const signer = new TestWallet(
-    privateKey,
-    new DefaultProvider({
-        network: bsv.Networks.testnet,
-    })
-)
+import { getDefaultSigner } from './tests/utils/txHelper'
 
 async function main() {
     await Counter.loadArtifact()
 
-    // TODO: Adjust the amount of satoshis locked in the smart contract:
-    const amount = 1
+    const count = BigInt(2)
+    const instance = new Counter(count)
+    // connect to a signer
+    await instance.connect(getDefaultSigner())
 
-    const instance = new Counter(
-        // TODO: Adjust constructor parameter values:
-        sha256(toByteString('hello world', true))
-    )
-
-    // Connect to a signer.
-    await instance.connect(signer)
-
-    // Contract deployment.
-    const deployTx = await instance.deploy(amount)
-    console.log(`Counter contract deployed: ${deployTx.id}`)
+    // deploy the contract and lock up 42 satoshis in it
+    const deployTx = await instance.deploy(42)
+    console.log('Counter contract deployed: ', deployTx.id)
 }
 
 main()
