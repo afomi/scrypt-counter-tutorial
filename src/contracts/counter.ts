@@ -3,22 +3,41 @@ import {
     ByteString,
     method,
     prop,
-    sha256,
-    Sha256,
     SmartContract,
+    hash256,
 } from 'scrypt-ts'
 
 export class Counter extends SmartContract {
-    @prop()
-    hash: Sha256
+    // `count` is stateful property
+    @prop(true)
+    count: bigint
 
-    constructor(hash: Sha256) {
+    // this is what users will call from the outside,
+    // when creating a new Counter smart contract
+    // like `new Counter(7);`
+    constructor(count: bigint) {
         super(...arguments)
-        this.hash = hash
+        this.count = count
     }
 
     @method()
-    public unlock(message: ByteString) {
-        assert(sha256(message) == this.hash, 'Hash does not match')
+    public incrementOnChain() {
+        // Increment counter.
+        this.increment()
+
+        // Ensure next output will contain this contracts code with
+        // the updated count property.
+        // And make sure balance in the contract does not change
+        const amount: bigint = this.ctx.utxo.value
+        // outputs containing the latest state and an optional change output
+        const outputs: ByteString =
+            this.buildStateOutput(amount) + this.buildChangeOutput()
+        // verify unlocking tx has the same outputs
+        assert(this.ctx.hashOutputs == hash256(outputs), 'hashOutputs mismatch')
+    }
+
+    @method()
+    increment(): void {
+        this.count++
     }
 }
