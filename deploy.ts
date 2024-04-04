@@ -1,4 +1,5 @@
 import { Counter } from './src/contracts/counter'
+import artifact from './artifacts/counter.json'
 import { getDefaultSigner } from './tests/utils/txHelper'
 import {
   MethodCallOptions
@@ -23,10 +24,11 @@ async function callIncrement(
     txId: string,
     atOutputIndex = 0
 ): Promise<string> {
-    await Counter.loadArtifact()
-
+    await Counter.loadArtifact(artifact)
     // Fetch TX via provider and reconstruct contract instance.
     const signer = getDefaultSigner()
+    await signer.connect();
+
     const tx = await signer.connectedProvider.getTransaction(txId)
     const instance = Counter.fromTx(tx, atOutputIndex)
 
