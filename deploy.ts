@@ -23,6 +23,8 @@ async function callIncrement(
     txId: string,
     atOutputIndex = 0
 ): Promise<string> {
+    await Counter.loadArtifact()
+
     // Fetch TX via provider and reconstruct contract instance.
     const signer = getDefaultSigner()
     const tx = await signer.connectedProvider.getTransaction(txId)
