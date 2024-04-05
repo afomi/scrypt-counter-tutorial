@@ -14,7 +14,7 @@ export class Counter extends SmartContract {
 
     // this is what users will call from the outside,
     // when creating a new Counter smart contract
-    // like `new Counter(7);`
+    // like `new Counter(BigInt(7));`
     constructor(count: bigint) {
         super(...arguments)
         this.count = count
